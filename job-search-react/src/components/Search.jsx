@@ -1,53 +1,72 @@
-import React, { Component } from 'react';
-import { Button, Form } from 'react-bootstrap';
+import React from 'react';
+import { Container, Row, Col, Form, Image } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
-class search extends Component {
-	state = { query: { position: '', location: '' } };
-	handleSearchInput = (e) => {
-		e.preventDefault();
-		this.setState({
-			query: {
-				...this.state.query,
-				[e.currentTarget.name]: e.currentTarget.value,
-			},
-		});
+export default class Search extends React.Component {
+	state = {
+		description: '',
+		location: '',
+		results: [],
 	};
-	//   triggersSearch = (e) => {
-	//     if (e.key === "Enter") {
-	//       this.props.searchJobs(this.state.query);
-	//     }
-	//   };
+
+	handleChange = (e) => {
+		const { name, value } = e.target;
+		this.setState({ [name]: value });
+	};
+
+	handleSubmit = async (e) => {
+		e.preventDefault();
+		const { description, location } = this.state;
+		const response = await fetch(
+			`https://strive-proxy.herokuapp.com/https://jobs.github.com/positions.json?description=${description}&location=${location}`
+		);
+		const results = await response.json();
+
+		this.setState({ results });
+	};
+
 	render() {
+		console.log(this.state);
 		return (
-			<div>
-				<Form>
-					<Form.Group controlId="formBasicEmail">
-						<Form.Label>Position</Form.Label>
-						<Form.Control
-							type="text"
-							placeholder="Enter email"
-							value={this.state.query.position}
-							onChange={(e) => this.handleSearchInput(e)}
-						/>
-					</Form.Group>
+			<Container>
+				<Row className="mt-5">
+					<Col xs={12} md={8} className="mx-auto">
+						<h1>Search Jobs...</h1>
 
-					<Form.Group controlId="formBasicPassword">
-						<Form.Label>Location</Form.Label>
-						<Form.Control
-							type="text"
-							placeholder="Password"
-							value={this.state.query.location}
-							onChange={(e) => this.handleSearchInput(e)}
-						/>
-					</Form.Group>
-
-					<Button variant="primary" type="submit">
-						Submit
-					</Button>
-				</Form>
-			</div>
+						<Form onSubmit={this.handleSubmit}>
+							<div className="d-flex my-3">
+								<Form.Control
+									name="description"
+									className="me-1"
+									type="search"
+									placeholder="Search jobs"
+									onChange={this.handleChange}
+								/>
+								<Form.Control
+									name="location"
+									type="search"
+									placeholder="Location"
+									onChange={this.handleChange}
+								/>
+							</div>
+							<Form.Control type="submit" value="Submit" />
+						</Form>
+						{this.state.results.map((result) => (
+							<Col xs={12} className="d-flex">
+								<Col xs={2}>
+									<Image fluid className="result-img" src={result.company_logo} />
+								</Col>
+								<Col xs={10} className="ps-2">
+									<h6 className="mt-3">{result.company}</h6>
+									<Link to={`/${result.id}`} className="btn btn-primary">
+										Show more
+									</Link>
+								</Col>
+							</Col>
+						))}
+					</Col>
+				</Row>
+			</Container>
 		);
 	}
 }
-
-export default search;
